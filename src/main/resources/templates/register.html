@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('VolunTrack - Register Account')}">
+    <meta charset="UTF-8">
+    <title>VolunTrack - Register Account</title>
+</head>
+<body>
+
+    <header th:replace="~{fragments/nav :: nav}"></header>
+
+    <main class="container" style="max-width: 520px; padding-top: 3rem; padding-bottom: 3rem;">
+        <div class="card">
+            <h2 class="card-title" style="text-align: center; margin-bottom: 1.5rem;">Create Your Account</h2>
+            
+            <div id="error-alert" class="alert alert-danger" style="display: none;"></div>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name / Display Name</label>
+                    <input type="text" id="name" class="form-control" placeholder="Alex Morgan" required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="alex@example.com" required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="••••••••" required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="role">Select Your Role</label>
+                    <select id="role" class="form-control" onchange="toggleRoleFields()">
+                        <option value="VOLUNTEER">Volunteer</option>
+                        <option value="CHARITY">Charity / NGO Organization</option>
+                        <option value="DONOR">Philanthropy Donor</option>
+                    </select>
+                </div>
+
+                <!-- Volunteer Specific Fields -->
+                <div id="volunteer-fields">
+                    <div class="form-group">
+                        <label class="form-label" for="skills">Skills & Expertise</label>
+                        <input type="text" id="skills" class="form-control" placeholder="e.g. Teaching, Gardening, First Aid" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="location">Location / City</label>
+                        <input type="text" id="location" class="form-control" placeholder="e.g. San Francisco, CA" />
+                    </div>
+                </div>
+
+                <!-- Charity Specific Fields -->
+                <div id="charity-fields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="orgName">Organization Legal Name</label>
+                        <input type="text" id="orgName" class="form-control" placeholder="e.g. GreenEarth Foundation" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regNumber">Tax / NGO Registration Number</label>
+                        <input type="text" id="regNumber" class="form-control" placeholder="e.g. 501C3-8849" />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Complete Registration</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                Already have an account? <a th:href="@{/login.html}" style="color: var(--primary); font-weight: 600;">Sign in here</a>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <script>
+        function toggleRoleFields() {
+            const role = document.getElementById("role").value;
+            document.getElementById("volunteer-fields").style.display = (role === "VOLUNTEER") ? "block" : "none";
+            document.getElementById("charity-fields").style.display = (role === "CHARITY") ? "block" : "none";
+        }
+
+        document.getElementById("register-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const alertBox = document.getElementById("error-alert");
+            alertBox.style.display = "none";
+
+            const payload = {
+                name: document.getElementById("name").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value,
+                role: document.getElementById("role").value,
+                skills: document.getElementById("skills").value,
+                location: document.getElementById("location").value,
+                orgName: document.getElementById("orgName").value,
+                regNumber: document.getElementById("regNumber").value
+            };
+
+            try {
+                const data = await apiFetch("/auth/register", {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("user", JSON.stringify({
+                    id: data.userId,
+                    name: data.name,
+                    email: data.email,
+                    role: data.role
+                }));
+
+                redirectUserToRoleDashboard(data.role);
+            } catch (err) {
+                alertBox.innerText = err.message;
+                alertBox.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>

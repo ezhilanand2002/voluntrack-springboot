@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('VolunTrack - Volunteer Dashboard')}">
+    <meta charset="UTF-8">
+    <title>VolunTrack - Volunteer Dashboard</title>
+</head>
+<body>
+
+    <header th:replace="~{fragments/nav :: nav}"></header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 700;">Welcome, Volunteer!</h1>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Track your logged hours, current achievement tier, and event applications.</p>
+            </div>
+            <a th:href="@{/events.html}" class="btn btn-primary">Browse Available Events</a>
+        </div>
+
+        <div id="alert-box" class="alert alert-danger" style="display: none;"></div>
+
+        <!-- Volunteer Stats Cards -->
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 2rem;">
+            <div class="card">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">TOTAL HOURS LOGGED</div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: var(--primary);" id="vol-hours">0 hrs</div>
+            </div>
+
+            <div class="card">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">ACHIEVEMENT TIER</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--secondary);" id="vol-badge">Bronze</div>
+            </div>
+
+            <div class="card">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">IMPACT POINTS</div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: var(--accent-cyan);" id="vol-points">0 pts</div>
+            </div>
+        </div>
+
+        <!-- Application History Table -->
+        <div class="card">
+            <h3 class="card-title">My Event Applications</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 2px solid var(--border);">
+                            <th style="padding: 0.75rem;">Application ID</th>
+                            <th style="padding: 0.75rem;">Event Title</th>
+                            <th style="padding: 0.75rem;">Applied Date</th>
+                            <th style="padding: 0.75rem;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applications-table-body">
+                        <tr>
+                            <td colspan="4" style="padding: 1rem; text-align: center; color: var(--text-secondary);">Loading applications...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Shared Footer Fragment -->
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            if (!requireRole("VOLUNTEER")) return;
+
+            try {
+                // Fetch Profile Stats
+                const profile = await apiFetch("/volunteers/me/profile");
+                document.getElementById("vol-hours").innerText = `${profile.totalHoursLogged || 0} hrs`;
+                document.getElementById("vol-points").innerText = `${profile.impactPoints || 0} pts`;
+                
+                const tier = profile.badgeTier || "Bronze";
+                document.getElementById("vol-badge").innerText = tier;
+
+                // Fetch Applications List
+                const apps = await apiFetch("/volunteers/me/applications");
+                const tbody = document.getElementById("applications-table-body");
+
+                if (apps.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="padding: 1rem; text-align: center; color: var(--text-secondary);">You haven't applied to any events yet. <a href="events.html" style="color: var(--primary);">Explore events now</a></td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = apps.map(a => `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 0.75rem;">#${a.id}</td>
+                        <td style="padding: 0.75rem;">Event #${a.eventId}</td>
+                        <td style="padding: 0.75rem;">
+                            <span class="badge ${a.status === 'ACCEPTED' ? 'badge-success' : a.status === 'REJECTED' ? 'badge-danger' : 'badge-warning'}">${a.status}</span>
+                        </td>
+                        <td style="padding: 0.75rem;">${new Date(a.appliedDate).toLocaleDateString()}</td>
+                        <td style="padding: 0.75rem;">
+                            <a href="event-detail.html?id=${a.eventId}" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">View Event & Certificate ➔</a>
+                        </td>
+                    </tr>
+                `).join("");
+
+            } catch (err) {
+                const alertBox = document.getElementById("alert-box");
+                alertBox.innerText = err.message;
+                alertBox.style.display = "block";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadVolunteerDashboard);
+    </script>
+</body>
+</html>

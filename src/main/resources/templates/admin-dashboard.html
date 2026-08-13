@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('VolunTrack - System Administrator Dashboard')}">
+    <meta charset="UTF-8">
+    <title>VolunTrack - System Administrator Dashboard</title>
+</head>
+<body>
+
+    <header th:replace="~{fragments/nav :: nav}"></header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 700;">Platform Administration & Governance</h1>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Full system control over events, charity verifications, and global metrics.</p>
+            </div>
+            <button class="btn btn-primary" onclick="openAdminCreateModal()">Add Event (on behalf of Charity)</button>
+        </div>
+
+        <div id="admin-alert" class="alert alert-danger" style="display: none;"></div>
+
+        <!-- Top Platform Stats Row -->
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 2rem;">
+            <div class="card">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">TOTAL EVENTS</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);" id="stat-events">0</div>
+            </div>
+            <div class="card">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">TOTAL FUNDS RAISED</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--secondary);" id="stat-funds">$0</div>
+            </div>
+            <div class="card">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">VOLUNTEERS</div>
+                <div style="font-size: 1.5rem; font-weight: 800;" id="stat-vols">0</div>
+            </div>
+            <div class="card">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">CHARITIES</div>
+                <div style="font-size: 1.5rem; font-weight: 800;" id="stat-charities">0</div>
+            </div>
+            <div class="card">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">DONORS</div>
+                <div style="font-size: 1.5rem; font-weight: 800;" id="stat-donors">0</div>
+            </div>
+            <div class="card">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">HOURS LOGGED</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--warning);" id="stat-hours">0</div>
+            </div>
+        </div>
+
+        <!-- Platform Analytics Charts Grid (Bar Chart + Doughnut/Pie Chart) -->
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); margin-bottom: 2rem; gap: 1.5rem;">
+            <!-- Chart 1: Bar Chart -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 class="card-title" style="margin: 0;">Global Platform Metric Overview</h3>
+                    <span class="badge badge-primary">Bar Metrics</span>
+                </div>
+                <div style="height: 320px; position: relative;">
+                    <canvas id="adminStatsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Doughnut / Pie Chart -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 class="card-title" style="margin: 0;">Platform Distribution Breakdown</h3>
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="toggleDistributionChartType()">🔄 Switch Doughnut / Pie</button>
+                </div>
+                <div style="height: 320px; position: relative;">
+                    <canvas id="adminDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Platform All Events Table -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3 class="card-title">Manage All System Events</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.875rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                            <th style="padding: 0.75rem;">ID</th>
+                            <th style="padding: 0.75rem;">Title</th>
+                            <th style="padding: 0.75rem;">Charity ID</th>
+                            <th style="padding: 0.75rem;">Status</th>
+                            <th style="padding: 0.75rem;">Funds ($)</th>
+                            <th style="padding: 0.75rem;">Volunteers</th>
+                            <th style="padding: 0.75rem;">Date</th>
+                            <th style="padding: 0.75rem; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-events-tbody">
+                        <tr><td colspan="8" style="padding: 1rem; text-align: center;">Loading all events...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Charity Verification Table -->
+        <div class="card">
+            <h3 class="card-title">Charity & NGO Verification Management</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.875rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                            <th style="padding: 0.75rem;">User ID</th>
+                            <th style="padding: 0.75rem;">Organization Name</th>
+                            <th style="padding: 0.75rem;">Tax / Registration No.</th>
+                            <th style="padding: 0.75rem;">Verification Status</th>
+                            <th style="padding: 0.75rem; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-charities-tbody">
+                        <tr><td colspan="5" style="padding: 1rem; text-align: center;">Loading charity profiles...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Admin Add Event Modal -->
+        <div id="admin-create-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+            <div class="card" style="width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 class="card-title" style="margin: 0;">Add Event (on behalf of Charity)</h3>
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" onclick="closeAdminModal('admin-create-modal')">✕</button>
+                </div>
+                <form id="admin-create-form">
+                    <div class="form-group">
+                        <label class="form-label">Select Charity</label>
+                        <select id="admin-create-charity" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Event Title</label>
+                        <input type="text" id="admin-create-title" class="form-control" required />
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Type / Category</label>
+                            <input type="text" id="admin-create-type" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" id="admin-create-date" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" id="admin-create-location" class="form-control" required />
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Volunteers Needed</label>
+                            <input type="number" id="admin-create-volunteers" class="form-control" value="20" required />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Target Funding ($)</label>
+                            <input type="number" id="admin-create-target" class="form-control" value="2500" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="admin-create-desc" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-outline" onclick="closeAdminModal('admin-create-modal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Event</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Edit Event Modal -->
+        <div id="admin-edit-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+            <div class="card" style="width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 class="card-title" style="margin: 0;">Edit Event Details</h3>
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" onclick="closeAdminModal('admin-edit-modal')">✕</button>
+                </div>
+                <form id="admin-edit-form">
+                    <input type="hidden" id="admin-edit-id" />
+                    <div class="form-group">
+                        <label class="form-label">Event Title</label>
+                        <input type="text" id="admin-edit-title" class="form-control" required />
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <input type="text" id="admin-edit-type" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" id="admin-edit-date" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" id="admin-edit-location" class="form-control" required />
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Volunteers Needed</label>
+                            <input type="number" id="admin-edit-volunteers" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Target Funding ($)</label>
+                            <input type="number" id="admin-edit-target" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="admin-edit-desc" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-outline" onclick="closeAdminModal('admin-edit-modal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <script th:src="@{/js/adminDashboard.js}"></script>
+</body>
+</html>

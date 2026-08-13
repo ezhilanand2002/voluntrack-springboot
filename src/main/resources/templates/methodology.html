@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('VolunTrack - Our Methodology & Impact Framework')}">
+    <meta charset="UTF-8">
+    <title>VolunTrack - Methodology</title>
+</head>
+<body>
+
+    <!-- Shared Sticky Navigation Fragment -->
+    <header th:replace="~{fragments/nav :: nav}"></header>
+
+    <main>
+        <!-- Hero Banner with Ambient Glowing Mesh Orbs -->
+        <section class="hero-section">
+            <div class="hero-bg-orb-1"></div>
+            <div class="hero-bg-orb-2"></div>
+
+            <div class="container hero-container reveal-on-scroll">
+                <h1 class="hero-headline">
+                    Engineering Transparent,<br>
+                    <span class="gradient-text">Audited Civic Action.</span>
+                </h1>
+                <p class="hero-subheadline">
+                    Discover how VolunTrack verifies volunteer hours, validates non-profit fundraising goals, and issues tamper-proof digital certificates of recognition.
+                </p>
+
+                <!-- Interactive Methodology Lookup Bar -->
+                <div class="hero-search-box">
+                    <form th:action="@{/methodology.html}" method="GET" class="hero-search-form">
+                        <div class="hero-search-input-wrapper">
+                            <input type="text" name="query" class="form-control" style="padding-left: 1rem;" placeholder="Lookup verification step or cryptographic standard (e.g. Supervisor Signature, jsPDF)..." aria-label="Search methodology">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="height: 48px; padding: 0 1.5rem; font-size: 0.95rem; border-radius: 12px;">
+                            Explore Standard ➔
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3-Paso Core Steps Section (Data-driven th:each) -->
+        <section class="section-padding">
+            <div class="container">
+                <div class="section-header reveal-on-scroll">
+                    <span class="section-tag">Verification Process</span>
+                    <h2 class="section-title">The 3-Step Impact Lifecycle</h2>
+                    <p class="section-subtitle">Every volunteer shift and campaign contribution undergoes dual-party verification for complete auditability.</p>
+                </div>
+
+                <div class="methodology-grid reveal-on-scroll">
+                    <div th:each="step : ${methodSteps}" class="step-card">
+                        <span class="step-number" th:text="${step.stepNumber}">Paso 01</span>
+                        <div class="step-header">
+                            <h3 class="step-title" th:text="${step.title}">Step Title</h3>
+                        </div>
+                        <ul class="step-bullets">
+                            <li th:each="bullet : ${step.bulletPoints}" th:text="${bullet}">Bullet Point</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Technical Verification Pillars -->
+        <section class="section-padding" style="border-top: 1px solid var(--border);">
+            <div class="container">
+                <div class="section-header reveal-on-scroll">
+                    <span class="section-tag">Quality Assurance</span>
+                    <h2 class="section-title">Four Pillars of Platform Integrity</h2>
+                    <p class="section-subtitle">Ensuring accuracy, security, and donor confidence across all non-profit operations.</p>
+                </div>
+
+                <div class="core-grid reveal-on-scroll">
+                    <div class="core-card">
+                        <div>
+                            <h3 class="core-card-title">Dual-Party Attendance Verification</h3>
+                            <p class="core-card-desc">Shift hours are logged directly by registered non-profit supervisors upon event completion. Unverified hours are quarantined until validated.</p>
+                        </div>
+                        <div class="core-proof-logos">
+                            <span class="proof-label">Validation Rule:</span>
+                            <span class="proof-pill">Supervisor Signature Required</span>
+                        </div>
+                    </div>
+
+                    <div class="core-card">
+                        <div>
+                            <h3 class="core-card-title">Automated Badge Tier Algorithm</h3>
+                            <p class="core-card-desc">Volunteers automatically progress through Bronze (10h), Silver (25h), Gold (50h), and Platinum (100h+) badge tiers as verified service hours accumulate.</p>
+                        </div>
+                        <div class="core-proof-logos">
+                            <span class="proof-label">Progression Tiers:</span>
+                            <span class="proof-pill">Bronze</span>
+                            <span class="proof-pill">Silver</span>
+                            <span class="proof-pill">Gold</span>
+                            <span class="proof-pill">Platinum</span>
+                        </div>
+                    </div>
+
+                    <div class="core-card">
+                        <div>
+                            <h3 class="core-card-title">In-Browser Cryptographic PDF Issuance</h3>
+                            <p class="core-card-desc">Certificates of Recognition are compiled client-side using vector rendering with unique timestamp hashes, preventing certificate forgery.</p>
+                        </div>
+                        <div class="core-proof-logos">
+                            <span class="proof-label">Engine:</span>
+                            <span class="proof-pill">Client jsPDF Engine</span>
+                        </div>
+                    </div>
+
+                    <div class="core-card">
+                        <div>
+                            <h3 class="core-card-title">Transparent Financial Auditing</h3>
+                            <p class="core-card-desc">Every donation transaction updates campaign target progress bars in real-time, backed by non-profit performance dashboards and report exports.</p>
+                        </div>
+                        <div class="core-proof-logos">
+                            <span class="proof-label">Auditing:</span>
+                            <span class="proof-pill">RealTime Goal Tracking</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Shared Footer Fragment -->
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

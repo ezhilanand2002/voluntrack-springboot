@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('VolunTrack - Charity NGO Dashboard')}">
+    <meta charset="UTF-8">
+    <title>VolunTrack - Charity NGO Dashboard</title>
+</head>
+<body>
+
+    <header th:replace="~{fragments/nav :: nav}"></header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+        <div style="margin-bottom: 2rem;">
+            <h1 style="font-size: 1.75rem; font-weight: 700;">Charity Performance & Management Hub</h1>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Track fundraising progress, manage event quotas, and review volunteer applications.</p>
+        </div>
+
+        <div id="dashboard-alert" class="alert alert-danger" style="display: none;"></div>
+
+        <!-- Quick Links Row -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3 class="card-title" style="margin-bottom: 1rem;">Quick Management Actions</h3>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a th:href="@{/events.html}" class="btn btn-primary">Create New Event</a>
+                <a th:href="@{/events.html}" class="btn btn-secondary">View My Events</a>
+                <a th:href="@{/events.html}" class="btn btn-outline">Review Applicants & Attendance</a>
+            </div>
+        </div>
+
+        <!-- KPI Metric Cards -->
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 2rem;">
+            <div class="card">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">TOTAL FUNDS RAISED</div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: var(--secondary);" id="kpi-raised">$0.00</div>
+            </div>
+
+            <div class="card">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">TOTAL TARGET GOAL</div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: var(--primary);" id="kpi-target">$0.00</div>
+            </div>
+
+            <div class="card">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">VOLUNTEERS ACCEPTED</div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);" id="kpi-volunteers">0</div>
+            </div>
+
+            <div class="card">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">COMPLETED INITIATIVES</div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: var(--warning);" id="kpi-completed">0</div>
+            </div>
+        </div>
+
+        <!-- Chart.js Reporting Card -->
+        <div class="card">
+            <h3 class="card-title">Fundraising Performance per Event</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">Comparison of Funds Collected ($) vs Target Goal Amount ($)</p>
+            <div style="height: 350px; position: relative;">
+                <canvas id="fundsChart"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <script>
+        let fundsChartInstance = null;
+
+        async function loadCharityDashboard() {
+            const user = getCurrentUser();
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (user.role !== "CHARITY") {
+                redirectUserToRoleDashboard(user.role);
+                return;
+            }
+
+            const alertBox = document.getElementById("dashboard-alert");
+
+            try {
+                const report = await apiFetch(`/reports/charity/${user.id}`);
+
+                // Update KPI Cards
+                document.getElementById("kpi-raised").innerText = `$${(report.totalCollectedAmount || 0).toLocaleString()}`;
+                document.getElementById("kpi-target").innerText = `$${(report.totalTargetAmount || 0).toLocaleString()}`;
+                document.getElementById("kpi-volunteers").innerText = report.totalVolunteersAccepted || 0;
+                document.getElementById("kpi-completed").innerText = report.completedEventsCount || 0;
+
+                // Render Chart.js Bar Chart
+                renderChart(report.eventTitles || [], report.collectedAmounts || [], report.targetAmounts || []);
+            } catch (err) {
+                alertBox.innerText = err.message;
+                alertBox.style.display = "block";
+            }
+        }
+
+        function renderChart(labels, collectedData, targetData) {
+            const ctx = document.getElementById("fundsChart").getContext("2d");
+
+            if (fundsChartInstance) {
+                fundsChartInstance.destroy();
+            }
+
+            fundsChartInstance = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels.length > 0 ? labels : ["No Active Events"],
+                    datasets: [
+                        {
+                            label: "Collected Amount ($)",
+                            data: collectedData.length > 0 ? collectedData : [0],
+                            backgroundColor: "#10b981",
+                            borderRadius: 6
+                        },
+                        {
+                            label: "Target Goal ($)",
+                            data: targetData.length > 0 ? targetData : [0],
+                            backgroundColor: "#cbd5e1",
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: "#f1f5f9" } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", loadCharityDashboard);
+    </script>
+</body>
+</html>

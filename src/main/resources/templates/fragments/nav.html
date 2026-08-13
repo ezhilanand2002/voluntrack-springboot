@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <header th:fragment="nav" class="navbar transparent">
+        <a th:href="@{/index.html}" class="brand" style="font-weight: 800; font-size: 1.5rem; letter-spacing: -0.02em; text-decoration: none;">
+            VolunTrack
+        </a>
+        <ul class="nav-links">
+            <li th:each="link : ${navLinks}">
+                <a th:href="@{${link.url}}" th:text="${link.label}" class="nav-link">Link</a>
+            </li>
+        </ul>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div id="nav-auth-container"></div>
+            <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle Light/Dark Theme" title="Toggle Light/Dark Theme">
+                <span id="theme-toggle-icon">🌙</span>
+            </button>
+        </div>
+    </header>
+</body>
+</html>

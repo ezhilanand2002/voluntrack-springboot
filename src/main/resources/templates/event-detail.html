@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('VolunTrack - Event Details')}">
+    <meta charset="UTF-8">
+    <title>VolunTrack - Event Details</title>
+</head>
+<body>
+
+    <header th:replace="~{fragments/nav :: nav}"></header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+        <div id="status-alert" class="alert" style="display: none;"></div>
+
+        <!-- Event Overview Header -->
+        <div id="event-header-card" class="card"></div>
+
+        <!-- Actions Container (Conditional based on User Role) -->
+        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+            
+            <!-- Left Column: Role Actions -->
+            <div>
+                <!-- VOLUNTEER Action Card -->
+                <div id="volunteer-action-card" class="card" style="display: none;">
+                    <h3 class="card-title">Volunteer Participation</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Join this initiative to help the community and earn verified hours.</p>
+                    <button class="btn btn-primary" onclick="applyForEvent()" style="width: 100%;">Apply to Volunteer</button>
+                </div>
+
+                <!-- DONOR Action Card -->
+                <div id="donor-action-card" class="card" style="display: none;">
+                    <h3 class="card-title">Make a Contribution</h3>
+                    <form id="donate-form">
+                        <div class="form-group">
+                            <label class="form-label" for="donate-amount">Amount ($)</label>
+                            <input type="number" id="donate-amount" class="form-control" value="50" min="1" required />
+                        </div>
+                        <button type="submit" class="btn btn-secondary" style="width: 100%;">Donate Now (Simulated)</button>
+                    </form>
+                </div>
+
+                <!-- Certificate Download Card (For Volunteers/Donors) -->
+                <div id="certificate-card" class="card">
+                    <h3 class="card-title">Official Recognition</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Download your verified PDF Certificate of Recognition generated client-side.</p>
+                    <button class="btn btn-outline" onclick="downloadCertificate()" style="width: 100%;">Download PDF Certificate (jsPDF)</button>
+                </div>
+            </div>
+
+            <!-- Right Column: Charity Management (Only visible for CHARITY) -->
+            <div id="charity-management-card" class="card" style="display: none;">
+                <h3 class="card-title">Charity Applicant Management</h3>
+                <div id="applications-list">
+                    <p style="color: var(--text-secondary); font-size: 0.875rem;">Loading applications...</p>
+                </div>
+
+                <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border);" />
+
+                <h3 class="card-title">Log Volunteer Attendance</h3>
+                <form id="attendance-form">
+                    <div class="form-group">
+                        <label class="form-label" for="att-volunteer-id">Volunteer User ID</label>
+                        <input type="number" id="att-volunteer-id" class="form-control" placeholder="Enter Volunteer User ID" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="att-hours">Hours Worked</label>
+                        <input type="number" id="att-hours" class="form-control" value="5" min="1" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Log Attendance & Recompute Badge</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Feedback & Rating Section (Visible for Everyone) -->
+        <div class="card" style="margin-top: 1.5rem;">
+            <h3 class="card-title">Reviews & Feedback</h3>
+            
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1rem; border-radius: 8px;">
+                <div style="font-size: 2rem; font-weight: 800; color: var(--warning);" id="avg-rating-value">0.0</div>
+                <div>
+                    <div style="font-weight: 600;" id="avg-rating-stars">Rating Score</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Average Community Rating</div>
+                </div>
+            </div>
+
+            <!-- Add Feedback Form -->
+            <form id="feedback-form" style="margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: 120px 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label" for="feedback-rating">Rating</label>
+                        <select id="feedback-rating" class="form-control">
+                            <option value="5">5 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="2">2 Stars</option>
+                            <option value="1">1 Star</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label" for="feedback-comment">Comment</label>
+                        <input type="text" id="feedback-comment" class="form-control" placeholder="Share your feedback or experience..." required />
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-outline">Submit Feedback</button>
+            </form>
+
+            <!-- Feedback Items List -->
+            <div id="feedback-items-list" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventId = urlParams.get("id");
+        let currentEvent = null;
+
+        function showAlert(msg, type = "danger") {
+            const alertBox = document.getElementById("status-alert");
+            alertBox.className = `alert alert-${type}`;
+            alertBox.innerText = msg;
+            alertBox.style.display = "block";
+            setTimeout(() => alertBox.style.display = "none", 4000);
+        }
+
+        async function loadEventDetails() {
+            if (!eventId) {
+                showAlert("No Event ID specified.");
+                return;
+            }
+
+            try {
+                currentEvent = await apiFetch(`/events/${eventId}`);
+                const headerCard = document.getElementById("event-header-card");
+
+                const target = currentEvent.targetAmount || 0;
+                const collected = currentEvent.collectedAmount || 0;
+                const percent = target > 0 ? Math.min(Math.round((collected / target) * 100), 100) : 0;
+
+                headerCard.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <div>
+                            <span class="badge badge-primary">${currentEvent.type || 'General'}</span>
+                            <span class="badge badge-success">${currentEvent.status || 'UPCOMING'}</span>
+                        </div>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Event ID: #${currentEvent.id}</span>
+                    </div>
+                    <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">${currentEvent.title}</h1>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">📍 Location: <strong>${currentEvent.location}</strong> | 📅 Date: <strong>${currentEvent.eventDate}</strong></p>
+                    <p style="line-height: 1.6; margin-bottom: 1.5rem;">${currentEvent.description}</p>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1rem; border-radius: 8px;">
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">VOLUNTEER QUOTA</div>
+                            <div style="font-size: 1.25rem; font-weight: 700;">${currentEvent.volunteersAccepted || 0} / ${currentEvent.volunteersNeeded || 0} Accepted</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">FUNDRAISING PROGRESS (${percent}%)</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: var(--secondary);">$${collected} / $${target}</div>
+                        </div>
+                    </div>
+                `;
+
+                setupRoleUI();
+                loadFeedback();
+            } catch (err) {
+                showAlert(err.message);
+            }
+        }
+
+        function setupRoleUI() {
+            const user = getCurrentUser();
+            if (!user) return;
+
+            if (user.role === "VOLUNTEER") {
+                document.getElementById("volunteer-action-card").style.display = "block";
+            } else if (user.role === "DONOR") {
+                document.getElementById("donor-action-card").style.display = "block";
+            } else if (user.role === "CHARITY") {
+                document.getElementById("charity-management-card").style.display = "block";
+                loadApplications();
+            }
+        }
+
+        async function applyForEvent() {
+            try {
+                await apiFetch(`/events/${eventId}/apply`, { method: "POST" });
+                showAlert("Application submitted successfully!", "success");
+            } catch (err) {
+                showAlert(err.message);
+            }
+        }
+
+        document.getElementById("donate-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const amount = document.getElementById("donate-amount").value;
+            try {
+                await apiFetch(`/events/${eventId}/donate`, {
+                    method: "POST",
+                    body: JSON.stringify({ amount: +amount })
+                });
+                showAlert(`Thank you for your $${amount} donation!`, "success");
+                loadEventDetails();
+            } catch (err) {
+                showAlert(err.message);
+            }
+        });
+
+        async function loadApplications() {
+            const list = document.getElementById("applications-list");
+            try {
+                const apps = await apiFetch(`/events/${eventId}/applications`);
+                if (apps.length === 0) {
+                    list.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.875rem;">No applicants yet.</p>`;
+                    return;
+                }
+
+                list.innerHTML = apps.map(app => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
+                        <div>
+                            <div style="font-weight: 600;">Volunteer User ID: #${app.volunteerId}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">Applied: ${new Date(app.appliedDate).toLocaleDateString()}</div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge ${app.status === 'ACCEPTED' ? 'badge-success' : app.status === 'REJECTED' ? 'badge-danger' : 'badge-warning'}">${app.status}</span>
+                            ${app.status === 'APPLIED' ? `
+                                <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="makeDecision(${app.id}, true)">Accept</button>
+                                <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="makeDecision(${app.id}, false)">Reject</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join("");
+            } catch (err) {
+                list.innerHTML = `<p style="color: var(--danger); font-size: 0.875rem;">${err.message}</p>`;
+            }
+        }
+
+        async function makeDecision(appId, accept) {
+            try {
+                await apiFetch(`/applications/${appId}/decision?accept=${accept}`, { method: "PUT" });
+                showAlert(accept ? "Applicant Accepted!" : "Applicant Rejected", "success");
+                loadApplications();
+                loadEventDetails();
+            } catch (err) {
+                showAlert(err.message);
+            }
+        }
+
+        document.getElementById("attendance-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const volunteerId = document.getElementById("att-volunteer-id").value;
+            const hoursWorked = document.getElementById("att-hours").value;
+
+            try {
+                await apiFetch(`/events/${eventId}/attendance`, {
+                    method: "POST",
+                    body: JSON.stringify({ volunteerId: +volunteerId, hoursWorked: +hoursWorked })
+                });
+                showAlert(`Successfully logged ${hoursWorked} hours for Volunteer #${volunteerId}!`, "success");
+            } catch (err) {
+                showAlert(err.message);
+            }
+        });
+
+        // Client-side jsPDF Certificate Generator
+        function downloadCertificate() {
+            const user = getCurrentUser() || { name: "Valued Volunteer" };
+            const title = currentEvent ? currentEvent.title : "VolunTrack Initiative";
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: "landscape" });
+
+            // Certificate Frame
+            doc.setLineWidth(4);
+            doc.setDrawColor(37, 99, 235);
+            doc.rect(10, 10, 277, 190);
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(28);
+            doc.setTextColor(30, 58, 138);
+            doc.text("CERTIFICATE OF RECOGNITION", 148, 50, { align: "center" });
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(14);
+            doc.setTextColor(71, 85, 105);
+            doc.text("This certificate is proudly awarded to", 148, 70, { align: "center" });
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(24);
+            doc.setTextColor(37, 99, 235);
+            doc.text(user.name.toUpperCase(), 148, 90, { align: "center" });
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(71, 85, 105);
+            doc.text(`For outstanding participation and dedication in the non-profit campaign:`, 148, 110, { align: "center" });
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(15, 23, 42);
+            doc.text(`"${title}"`, 148, 125, { align: "center" });
+
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(10);
+            doc.text(`Issued on ${new Date().toLocaleDateString()} via VolunTrack Platform`, 148, 160, { align: "center" });
+
+            doc.save(`VolunTrack_Certificate_${title.replace(/\s+/g, "_")}.pdf`);
+            showAlert("Downloaded PDF Certificate successfully!", "success");
+        }
+
+        // Feedback & Rating Handlers
+        async function loadFeedback() {
+            try {
+                const feedbacks = await apiFetch(`/events/${eventId}/feedback`);
+                const ratingData = await apiFetch(`/events/${eventId}/rating`);
+
+                document.getElementById("avg-rating-value").innerText = ratingData.averageRating || "0.0";
+
+                const list = document.getElementById("feedback-items-list");
+                if (feedbacks.length === 0) {
+                    list.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.875rem;">No reviews yet. Be the first to leave feedback!</p>`;
+                    return;
+                }
+
+                list.innerHTML = feedbacks.map(fb => `
+                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1rem; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                            <span style="font-weight: 600; font-size: 0.9rem;">User #${fb.givenBy} (${fb.userRole || 'User'})</span>
+                            <span style="color: var(--warning); font-weight: 700;">${'⭐'.repeat(fb.rating)}</span>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--text-primary);">${fb.comment}</p>
+                    </div>
+                `).join("");
+            } catch (err) {
+                console.error("Error loading feedback:", err);
+            }
+        }
+
+        document.getElementById("feedback-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const rating = +document.getElementById("feedback-rating").value;
+            const comment = document.getElementById("feedback-comment").value;
+
+            try {
+                await apiFetch(`/events/${eventId}/feedback`, {
+                    method: "POST",
+                    body: JSON.stringify({ rating, comment })
+                });
+                showAlert("Feedback submitted successfully!", "success");
+                document.getElementById("feedback-comment").value = "";
+                loadFeedback();
+            } catch (err) {
+                showAlert(err.message);
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", loadEventDetails);
+    </script>
+</body>
+</html>

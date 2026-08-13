@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('VolunTrack - Donor Dashboard')}">
+    <meta charset="UTF-8">
+    <title>VolunTrack - Donor Dashboard</title>
+</head>
+<body>
+
+    <header th:replace="~{fragments/nav :: nav}"></header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 700;">Philanthropy & Giving History</h1>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Track your contributions to non-profit campaigns and community causes.</p>
+            </div>
+            <a th:href="@{/events.html}" class="btn btn-secondary">Contribute to More Campaigns</a>
+        </div>
+
+        <div id="alert-box" class="alert alert-danger" style="display: none;"></div>
+
+        <!-- Donor KPI Metric Card -->
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 2rem;">
+            <div class="card">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">TOTAL CONTRIBUTION AMOUNT</div>
+                <div style="font-size: 2rem; font-weight: 800; color: var(--secondary);" id="donor-total-amount">$0.00</div>
+            </div>
+            <div class="card">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">TOTAL CAMPAIGNS SUPPORTED</div>
+                <div style="font-size: 2rem; font-weight: 800; color: var(--primary);" id="donor-total-count">0</div>
+            </div>
+        </div>
+
+        <!-- Donation History Table -->
+        <div class="card">
+            <h3 class="card-title">My Donation History</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                            <th style="padding: 0.75rem;">Transaction ID</th>
+                            <th style="padding: 0.75rem;">Event ID</th>
+                            <th style="padding: 0.75rem;">Contribution Amount</th>
+                            <th style="padding: 0.75rem;">Status</th>
+                            <th style="padding: 0.75rem;">Date</th>
+                            <th style="padding: 0.75rem;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="donations-table-body">
+                        <tr>
+                            <td colspan="6" style="padding: 1rem; text-align: center; color: var(--text-secondary);">Loading donation history...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <script>
+        async function loadDonorDashboard() {
+            const user = getCurrentUser();
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (user.role !== "DONOR") {
+                redirectUserToRoleDashboard(user.role);
+                return;
+            }
+
+            try {
+                const donations = await apiFetch("/donations/me");
+                const tbody = document.getElementById("donations-table-body");
+
+                const totalSum = donations.reduce((sum, d) => sum + (d.amount || 0), 0);
+                document.getElementById("donor-total-amount").innerText = `$${totalSum.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                document.getElementById("donor-total-count").innerText = donations.length;
+
+                if (donations.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="padding: 1rem; text-align: center; color: var(--text-secondary);">You haven't made any contributions yet. <a href="events.html" style="color: var(--secondary); font-weight: 600;">Explore active campaigns</a></td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = donations.map(d => `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 0.75rem;">#${d.id}</td>
+                        <td style="padding: 0.75rem;">Event #${d.eventId}</td>
+                        <td style="padding: 0.75rem; font-weight: 700; color: var(--secondary);">$${(d.amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td style="padding: 0.75rem;">
+                            <span class="badge badge-success">${d.paymentStatus || 'SUCCESS'}</span>
+                        </td>
+                        <td style="padding: 0.75rem;">${new Date(d.transactionDate).toLocaleDateString()}</td>
+                        <td style="padding: 0.75rem;">
+                            <a href="event-detail.html?id=${d.eventId}" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">View Event ➔</a>
+                        </td>
+                    </tr>
+                `).join("");
+
+            } catch (err) {
+                const alertBox = document.getElementById("alert-box");
+                alertBox.innerText = err.message;
+                alertBox.style.display = "block";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadDonorDashboard);
+    </script>
+</body>
+</html>

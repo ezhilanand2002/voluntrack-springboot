@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('VolunTrack - Explore Events')}">
+    <meta charset="UTF-8">
+    <title>VolunTrack - Explore Events</title>
+</head>
+<body>
+
+    <header th:replace="~{fragments/nav :: nav}"></header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 700;">Explore Opportunities & Campaigns</h1>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Find volunteer initiatives or contribute to active fundraising goals.</p>
+            </div>
+
+            <!-- Create Event Button (Only visible for CHARITY role) -->
+            <button id="create-event-btn" class="btn btn-primary" style="display: none;" onclick="toggleCreateModal(true)">+ Create New Event</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="card" style="padding: 1rem 1.25rem;">
+            <div style="display: flex; gap: 1rem;">
+                <input type="text" id="search-input" class="form-control" placeholder="Search by title, category, or location..." onkeyup="if(event.key==='Enter') loadEvents()" />
+                <button class="btn btn-secondary" onclick="loadEvents()">Search</button>
+            </div>
+        </div>
+
+        <!-- Events Grid -->
+        <div id="events-grid" class="grid"></div>
+
+        <!-- Create Event Modal Form -->
+        <div id="create-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+            <div class="card" style="width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 class="card-title" style="margin: 0;">Create New Event</h3>
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" onclick="toggleCreateModal(false)">✕</button>
+                </div>
+
+                <div id="modal-alert" class="alert alert-danger" style="display: none;"></div>
+
+                <form id="create-event-form">
+                    <div class="form-group">
+                        <label class="form-label" for="event-title">Event Title</label>
+                        <input type="text" id="event-title" class="form-control" placeholder="e.g. Coastal Ocean Beach Cleanup" required />
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="event-type">Category / Type</label>
+                            <input type="text" id="event-type" class="form-control" placeholder="e.g. Environment, Relief" required />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="event-date">Event Date</label>
+                            <input type="date" id="event-date" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="event-location">Location</label>
+                        <input type="text" id="event-location" class="form-control" placeholder="e.g. Pier 4, Santa Monica, CA" required />
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="event-volunteers">Volunteers Needed</label>
+                            <input type="number" id="event-volunteers" class="form-control" value="25" required />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="event-target">Target Funding ($)</label>
+                            <input type="number" id="event-target" class="form-control" value="5000" required />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="event-desc">Description</label>
+                        <textarea id="event-desc" class="form-control" rows="3" placeholder="Describe the goal and requirements..." required></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-outline" onclick="toggleCreateModal(false)">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Publish Event</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <script>
+        function checkRolePermissions() {
+            const user = getCurrentUser();
+            if (user && user.role === "CHARITY") {
+                document.getElementById("create-event-btn").style.display = "inline-flex";
+            }
+        }
+
+        function toggleCreateModal(show) {
+            document.getElementById("create-modal").style.display = show ? "flex" : "none";
+        }
+
+        async function loadEvents() {
+            const search = document.getElementById("search-input").value;
+            const grid = document.getElementById("events-grid");
+            
+            try {
+                const query = search ? `?search=${encodeURIComponent(search)}` : "";
+                const events = await apiFetch(`/events${query}`);
+
+                if (events.length === 0) {
+                    grid.innerHTML = `<div class="card" style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">No events found matching your search.</div>`;
+                    return;
+                }
+
+                grid.innerHTML = events.map(evt => {
+                    const target = evt.targetAmount || 0;
+                    const collected = evt.collectedAmount || 0;
+                    const percent = target > 0 ? Math.min(Math.round((collected / target) * 100), 100) : 0;
+
+                    return `
+                        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <span class="badge badge-primary">${evt.type || 'General'}</span>
+                                    <span class="badge badge-success">${evt.status || 'UPCOMING'}</span>
+                                </div>
+                                <h3 class="card-title">${evt.title}</h3>
+                                <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">Location: ${evt.location} • Date: ${evt.eventDate}</p>
+                                <p style="font-size: 0.9rem; margin-bottom: 1.25rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${evt.description}</p>
+                            </div>
+
+                            <div>
+                                <div style="font-size: 0.8rem; display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-weight: 600;">
+                                    <span>Funded: $${collected} / $${target}</span>
+                                    <span>${percent}%</span>
+                                </div>
+                                <div style="height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; margin-bottom: 1rem;">
+                                    <div style="width: ${percent}%; height: 100%; background: var(--secondary);"></div>
+                                </div>
+
+                                <a href="event-detail.html?id=${evt.id}" class="btn btn-outline" style="width: 100%; text-align: center;">View Details & Actions ➔</a>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            } catch (err) {
+                grid.innerHTML = `<div class="alert alert-danger" style="grid-column: 1/-1;">${err.message}</div>`;
+            }
+        }
+
+        document.getElementById("create-event-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const alertBox = document.getElementById("modal-alert");
+            alertBox.style.display = "none";
+
+            const payload = {
+                title: document.getElementById("event-title").value,
+                type: document.getElementById("event-type").value,
+                eventDate: document.getElementById("event-date").value,
+                location: document.getElementById("event-location").value,
+                volunteersNeeded: +document.getElementById("event-volunteers").value,
+                targetAmount: +document.getElementById("event-target").value,
+                description: document.getElementById("event-desc").value,
+                status: "UPCOMING"
+            };
+
+            try {
+                await apiFetch("/events", {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+                toggleCreateModal(false);
+                loadEvents();
+            } catch (err) {
+                alertBox.innerText = err.message;
+                alertBox.style.display = "block";
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            checkRolePermissions();
+            loadEvents();
+        });
+    </script>
+</body>
+</html>

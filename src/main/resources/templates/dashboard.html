@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>VolunTrack - Dashboard Router</title>
+    <script th:src="@{/js/api.js}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const user = getCurrentUser();
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                redirectUserToRoleDashboard(user.role);
+            }
+        });
+    </script>
+</head>
+<body>
+    <p style="font-family: sans-serif; text-align: center; margin-top: 4rem;">Redirecting to your role dashboard...</p>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('VolunTrack - Volunteer & Fundraising System')}">
+    <meta charset="UTF-8">
+    <title>VolunTrack</title>
+</head>
+<body>
+
+    <!-- Shared Sticky Navigation Fragment -->
+    <header th:replace="~{fragments/nav :: nav}"></header>
+
+    <main>
+        <!-- HERO SECTION WITH ANIMATED BACKGROUND ORBS -->
+        <section class="hero-section">
+            <div class="hero-bg-orb-1"></div>
+            <div class="hero-bg-orb-2"></div>
+
+            <div class="container hero-container reveal-on-scroll">
+                <h1 class="hero-headline">
+                    Empower Communities.<br>
+                    <span class="gradient-text">Transform Lives Through Giving.</span>
+                </h1>
+
+                <p class="hero-subheadline">
+                    VolunTrack connects non-profit organizations with passionate volunteers and generous donors. Track verified volunteer hours, earn achievement badges, and fund critical initiatives in real-time.
+                </p>
+
+                <!-- Interactive Hero Event Search Bar -->
+                <div class="hero-search-box">
+                    <form th:action="@{/events.html}" method="GET" class="hero-search-form">
+                        <div class="hero-search-input-wrapper">
+                            <input type="text" name="search" class="form-control" style="padding-left: 1rem;" placeholder="Search events by keyword, city, or cause (e.g. Tree Plantation, Food Bank)..." aria-label="Search events">
+                        </div>
+                        <select name="type" class="form-control hero-search-select" aria-label="Filter by cause type">
+                            <option value="">All Cause Types</option>
+                            <option value="VOLUNTEER">Volunteer Opportunities</option>
+                            <option value="FUNDRAISER">Fundraising Campaigns</option>
+                            <option value="HYBRID">Dual Volunteer & Donation</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary" style="height: 48px; padding: 0 1.5rem; font-size: 0.95rem; border-radius: 12px;">
+                            Search Events ➔
+                        </button>
+                    </form>
+                </div>
+
+                <div class="hero-actions">
+                    <a th:href="@{/events.html}" class="btn btn-primary" style="padding: 0.875rem 1.75rem; font-size: 1rem;">Browse Active Events ➔</a>
+                    <a th:href="@{/register.html}" class="btn btn-outline" style="padding: 0.875rem 1.75rem; font-size: 1rem;">Get Started</a>
+                </div>
+
+                <!-- Qronos Product-Led Live Dashboard Preview -->
+                <div class="card reveal-on-scroll" style="margin-top: 3.5rem; background: rgba(14, 20, 34, 0.85); border: 1px solid rgba(99, 102, 241, 0.3); box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.8), 0 0 30px rgba(99, 102, 241, 0.2); padding: 1.75rem; border-radius: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span class="kicker-dot"></span>
+                            <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary); letter-spacing: -0.01em;">VolunTrack Autonomous Impact Engine</span>
+                            <span class="badge badge-success" style="font-size: 0.7rem;">Live Pipeline Active</span>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <span class="badge badge-primary">Volunteers: 12,450h</span>
+                            <span class="badge badge-warning">Funds: $850,000</span>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Activity Mini Grid -->
+                    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Active Shift Dispatch</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin: 0.25rem 0;">32 Events Enrolled</div>
+                            <div style="font-size: 0.8rem; color: #34d399;">98% Shift Completion</div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Fundraiser Goal Target</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: #818cf8; margin: 0.25rem 0;">$12,000 / $15,000</div>
+                            <div style="font-size: 0.8rem; color: #a5b4fc;">80% Campaign Milestone</div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Instant PDF Verification</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: #38bdf8; margin: 0.25rem 0;">4,890 Certificates</div>
+                            <div style="font-size: 0.8rem; color: #67e8f9;">Cryptographically Signed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- OUR CORE GRID (DATA-DRIVEN TH:EACH) -->
+        <section class="section-padding">
+            <div class="container">
+                <div class="section-header reveal-on-scroll">
+                    <span class="section-tag">Core Capabilities</span>
+                    <h2 class="section-title">Built for Modern NGOs & Volunteers</h2>
+                    <p class="section-subtitle">A comprehensive suite designed to streamline non-profit event operations, volunteer management, and transparent fundraising.</p>
+                </div>
+
+                <div class="core-grid reveal-on-scroll">
+                    <div th:each="item : ${coreItems}" class="core-card">
+                        <div>
+                            <h3 class="core-card-title" th:text="${item.title}">Capability Title</h3>
+                            <p class="core-card-desc" th:text="${item.description}">Capability Description</p>
+                        </div>
+                        <div class="core-proof-logos">
+                            <span class="proof-label">Trusted by:</span>
+                            <span th:each="logo : ${item.proofLogos}" th:text="${logo}" class="proof-pill">Logo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STATS MARQUEE STRIP -->
+        <section class="stats-marquee-container">
+            <div class="marquee-track">
+                <!-- Group 1 -->
+                <div class="marquee-content">
+                    <th:block th:each="stat : ${stats}">
+                        <div class="stat-item">
+                            <span class="stat-number" th:text="${stat.number}">12,450+</span>
+                            <span class="stat-label" th:text="${stat.label}">Hours Logged</span>
+                        </div>
+                        <span class="stat-divider">•</span>
+                    </th:block>
+                </div>
+
+                <!-- Group 2 (Duplicate for Seamless Infinite Marquee Loop) -->
+                <div class="marquee-content">
+                    <th:block th:each="stat : ${stats}">
+                        <div class="stat-item">
+                            <span class="stat-number" th:text="${stat.number}">12,450+</span>
+                            <span class="stat-label" th:text="${stat.label}">Hours Logged</span>
+                        </div>
+                        <span class="stat-divider">•</span>
+                    </th:block>
+                </div>
+            </div>
+        </section>
+
+        <!-- TEAM SECTION (DATA-DRIVEN TH:EACH - NO PICTURES) -->
+        <section id="team" class="section-padding">
+            <div class="container">
+                <div class="section-header reveal-on-scroll">
+                    <span class="section-tag">Our Leadership</span>
+                    <h2 class="section-title">The People Driving VolunTrack</h2>
+                    <p class="section-subtitle">Dedicated engineers, non-profit coordinators, and community leaders working together to amplify global civic engagement.</p>
+                </div>
+
+                <div class="team-carousel-wrapper reveal-on-scroll">
+                    <!-- Dynamic Team Cards Loop (Anand, Bala, Surya with Dark Glass Initials Badges) -->
+                    <th:block th:each="member, iterStat : ${teamMembers}">
+                        <div class="team-card">
+                            <div style="height: 150px; display: flex; align-items: center; justify-content: center; background: rgba(99, 102, 241, 0.06); border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                                <div style="width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: 800; color: #ffffff; box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);" th:text="${#strings.substring(member.name, 0, 1)}">A</div>
+                            </div>
+                            <div class="team-info">
+                                <div class="team-name" style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary);" th:text="${member.name}">Member Name</div>
+                                <div class="team-role" style="font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem;" th:text="${member.role}">Member Role</div>
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.55;" th:text="${member.bio}">Member Bio</p>
+                            </div>
+                        </div>
+
+                        <!-- Embedded Pull-Quote Card Mid-Scroll -->
+                        <div th:if="${iterStat.count == 2}" class="team-quote-card">
+                            <div class="quote-icon">“</div>
+                            <p class="quote-text">Volunteering isn't just about giving time; it's about engineering sustainable change in communities.</p>
+                            <div class="quote-author">— Dr. Aris Thorne, Board Advisor</div>
+                        </div>
+                    </th:block>
+                </div>
+
+                <div class="team-view-more reveal-on-scroll">
+                    <a th:href="@{/team.html}">Ver más / View Dedicated Team Page ➔</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- METHODOLOGY SECTION (DATA-DRIVEN TH:EACH) -->
+        <section id="methodology" class="section-padding">
+            <div class="container">
+                <div class="section-header reveal-on-scroll">
+                    <span class="section-tag">Methodology</span>
+                    <h2 class="section-title">Verified Impact Workflow</h2>
+                    <p class="section-subtitle">Our 3-step transparent framework ensures every volunteer shift and dollar donated yields measurable social impact.</p>
+                </div>
+
+                <div class="methodology-grid reveal-on-scroll">
+                    <div th:each="step : ${methodSteps}" class="step-card">
+                        <span class="step-number" th:text="${step.stepNumber}">Paso 01</span>
+                        <div class="step-header">
+                            <h3 class="step-title" th:text="${step.title}">Step Title</h3>
+                        </div>
+                        <ul class="step-bullets">
+                            <li th:each="bullet : ${step.bulletPoints}" th:text="${bullet}">Bullet Point</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PARTNER LOGOS MARQUEE SECTION -->
+        <section class="logo-marquee-section">
+            <div class="logo-marquee-label">Trusted by Leading Charities, NGOs & Global Foundations</div>
+            <div class="logo-marquee-track">
+                <!-- Group 1 -->
+                <div class="logo-marquee-content">
+                    <div th:each="partner : ${partnerLogos}" class="logo-item">
+                        <span th:text="${partner.name}">Partner Name</span>
+                    </div>
+                </div>
+
+                <!-- Group 2 (Duplicate for Seamless Loop) -->
+                <div class="logo-marquee-content">
+                    <div th:each="partner : ${partnerLogos}" class="logo-item">
+                        <span th:text="${partner.name}">Partner Name</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIMONIALS CAROUSEL SECTION (DATA-DRIVEN TH:EACH) -->
+        <section class="section-padding">
+            <div class="container">
+                <div class="section-header reveal-on-scroll">
+                    <span class="section-tag">Testimonials</span>
+                    <h2 class="section-title">What Our Community Says</h2>
+                    <p class="section-subtitle">Hear from non-profit leaders, active volunteers, and donors who rely on VolunTrack daily.</p>
+                </div>
+
+                <div class="testimonials-container reveal-on-scroll">
+                    <div th:each="test, iterStat : ${testimonials}" 
+                         th:classappend="${iterStat.index == 0} ? 'active' : ''" 
+                         class="testimonial-card">
+                        <p class="testimonial-quote" th:text="${test.quote}">Quote Text</p>
+                        <div class="testimonial-author">
+                            <div class="author-meta">
+                                <div>
+                                    <div class="author-name" th:text="${test.authorName}">Author Name</div>
+                                    <div class="author-title" th:text="${test.authorTitle}">Author Title</div>
+                                </div>
+                            </div>
+                            <a th:href="${test.linkedinUrl}" target="_blank" rel="noopener" class="linkedin-link" title="LinkedIn Profile">in</a>
+                        </div>
+                    </div>
+
+                    <!-- Carousel Dots Navigation -->
+                    <div class="carousel-nav-btns">
+                        <span th:each="test, iterStat : ${testimonials}" 
+                              th:classappend="${iterStat.index == 0} ? 'active' : ''" 
+                              th:onclick="'setTestimonialSlide(' + ${iterStat.index} + ')'" 
+                              class="carousel-dot"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Shared Footer Fragment -->
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

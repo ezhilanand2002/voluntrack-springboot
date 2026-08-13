@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('VolunTrack - Our Team & Leadership')}">
+    <meta charset="UTF-8">
+    <title>VolunTrack - Our Team</title>
+</head>
+<body>
+
+    <!-- Shared Sticky Navigation Fragment -->
+    <header th:replace="~{fragments/nav :: nav}"></header>
+
+    <main>
+        <!-- Hero Banner with Ambient Glowing Mesh Orbs -->
+        <section class="hero-section">
+            <div class="hero-bg-orb-1"></div>
+            <div class="hero-bg-orb-2"></div>
+
+            <div class="container hero-container reveal-on-scroll">
+                <h1 class="hero-headline">
+                    Meet the Visionaries Behind<br>
+                    <span class="gradient-text">VolunTrack Civic Technology.</span>
+                </h1>
+                <p class="hero-subheadline">
+                    Our team brings together platform architects, non-profit directors, security engineers, and community organizers dedicated to empowering global civic action.
+                </p>
+
+                <!-- Interactive Team Member Filter Bar -->
+                <div class="hero-search-box">
+                    <form th:action="@{/team.html}" method="GET" class="hero-search-form">
+                        <div class="hero-search-input-wrapper">
+                            <input type="text" name="member" class="form-control" style="padding-left: 1rem;" placeholder="Search by leader name or domain (e.g. Anand, Platform Architect, Partnerships)..." aria-label="Filter team members">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="height: 48px; padding: 0 1.5rem; font-size: 0.95rem; border-radius: 12px;">
+                            Filter Team ➔
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Full Team Grid Section (Data-driven th:each - Anand, Bala, Surya) -->
+        <section class="section-padding">
+            <div class="container">
+                <div class="section-header reveal-on-scroll">
+                    <span class="section-tag">Leadership & Staff</span>
+                    <h2 class="section-title">Core Team Members</h2>
+                    <p class="section-subtitle">Passionate professionals driving non-profit outreach, software excellence, and volunteer retention.</p>
+                </div>
+
+                <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem;">
+                    <div th:each="member : ${teamMembers}" class="core-card reveal-on-scroll" style="padding: 2rem; overflow: hidden;">
+                        <div style="height: 120px; display: flex; align-items: center; justify-content: center; background: rgba(99, 102, 241, 0.06); border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: 800; color: #ffffff; box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);" th:text="${#strings.substring(member.name, 0, 1)}">A</div>
+                        </div>
+                        <div>
+                            <div class="badge badge-primary" style="margin-bottom: 0.5rem;" th:text="${member.role}">Role</div>
+                            <h3 class="core-card-title" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-primary);" th:text="${member.name}">Member Name</h3>
+                            <p class="core-card-desc" style="color: var(--text-secondary);" th:text="${member.bio}">Member Bio</p>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                                <a href="https://linkedin.com" target="_blank" rel="noopener" class="social-icon" title="LinkedIn">in</a>
+                                <a href="#" class="social-icon" title="Twitter/X">X</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Board Pull-Quote Banner -->
+        <section class="section-padding" style="background: rgba(14, 20, 34, 0.8); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+            <div class="container reveal-on-scroll" style="text-align: center; max-width: 800px;">
+                <div style="font-size: 3.5rem; line-height: 1; opacity: 0.4; margin-bottom: 1rem; color: #818cf8;">“</div>
+                <blockquote style="font-size: 1.4rem; font-weight: 600; line-height: 1.6; margin-bottom: 1.5rem; font-style: italic; color: #f8fafc;">
+                    Volunteering isn't just about giving time; it's about engineering sustainable change in communities through transparent technology.
+                </blockquote>
+                <div style="font-size: 1.05rem; font-weight: 700; color: #38bdf8;">— Dr. Aris Thorne, Board Advisor & Social Impact Specialist</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Shared Footer Fragment -->
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

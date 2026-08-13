@@ -1,0 +1,13 @@
+# ==========================================================================
+# Render.com Free Deployment Blueprint Specification
+# ==========================================================================
+services:
+  - type: web
+    name: voluntrack-app
+    env: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8080
